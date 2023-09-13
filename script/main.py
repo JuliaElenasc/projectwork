@@ -1,64 +1,37 @@
 #Aprire file proporzionati
 import geopandas as gpd
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 def add_comune(df, col):
-    group = df.groupby(col).mean()
+    group = df.groupby(col).mean().reset_index()
     return group
 
+def plot_centroid (gdf):
+    gdf.plot()
+    gdf['centroid'].plot(marker='o', color='red', markersize=5, ax=plt.gca())
+    plt.show()
 
 if __name__=='__main__':
-
+    #Files
     comune= '.\\dati\Limiti01012023\Limiti01012023\Com01012023\Com01012023_WGS84.shp'
+    dati = pd.read_csv('.\\dati\DatidiMercato.csv')
+    
+    # Delete data -->PENDIENTE
+    comune_del= ["Campione d'Italia", "Capraia Isola", "Isola del Giglio", "Ponza", "Ventotene", "Procida", "Isole Tremiti", "Favignana", "Pantelleria", "Ustica", "Lipari", "Lampedusa e Linosa", "La Maddalena", "Carloforte"]
     
     #----------- 1. OPEN DATA---------------
     # Open the shapefile
     gdf = gpd.read_file(comune)
-    # Info GeoDataFrame
-    print(gdf.head()) 
-    #print(gdf.crs)     # (CRS)
-    #print(gdf.geometry)  # geometries 
-    # Calcular el centroide de cada polígono y agregarlo como una nueva columna
-    gdf['centroid'] = gdf['geometry'].centroid
-    # Mostrar los primeros 10 registros del GeoDataFrame con los centroides
-    print(gdf.head(10))
-    #gdf.plot()
-    #gdf['centroid'].plot(marker='o', color='red', markersize=5, ax=plt.gca())
-    #plt.show()
-
-    # Open csv 
-    dati = pd.read_csv('.\\dati\DatidiMercato.csv')
+    print(gdf.shape) # vedere le dimensioni 
     
-    # Agregare i dati 
+    # Agregare i dati csv 
     data_group = add_comune(dati, 'Comune_residenza')
-    data_group.rename(columns={'Comune_residenza': 'COMUNE'},inplace= True)
-    print(data_group.dtypes)
-    print(data_group)
-    
-    #---------- 2. Unire le tabelle------------------------------
+    print(data_group.shape)
+
     # Fare l'unione tra CSV e Shapefile
-    #total_data= pd.merge(gdf, data_group, on='COMUNE')
+    total_data= pd.DataFrame(pd.merge(gdf, data_group, left_on='COMUNE', right_on= 'Comune_residenza', how= 'outer'))
+    print(total_data)
 
-
-
-
-
-    
     # Matriz de adyacencia --> PENDIENTE
     
-    # Delete data iland --> PENDIENTE
-    #comune_poly= ["Campione d'Italia", "Capraia Isola", "Isola del Giglio", "Ponza", "Ventotene", "Procida", "Isole Tremiti", "Favignana", "Pantelleria", "Ustica", "Lipari", "Lampedusa e Linosa", "La Maddalena", "Carloforte"]
-
-    # Open dati csv
-    dataframe = pd.read_csv(dati)
     
-
-
-
-
-
-
-
-    # Realiza operaciones o visualizaciones con los datos geoespaciales, por ejemplo:
-    gdf.plot()  # Crea una visualización simple del GeoDataFrame
