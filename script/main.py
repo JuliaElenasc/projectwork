@@ -21,7 +21,7 @@ if __name__=='__main__':
     
     #----------- 1. OPEN DATA---------------
     # Open the shapefile
-    gdf = gpd.read_file(comune)
+    gdf = gpd.read_file(comune, encoding='utf-8')
     print(gdf.shape) # vedere le dimensioni 
     
     # Agregare i dati csv 
@@ -32,6 +32,12 @@ if __name__=='__main__':
     total_data= pd.DataFrame(pd.merge(gdf, data_group, left_on='COMUNE', right_on= 'Comune_residenza', how= 'outer'))
     print(total_data)
 
+    # Vedere tutti i datti che non sono uniti
+    nan_data = total_data[total_data['COMUNE'].isna()]
+    print(nan_data)
+
+
     # Matriz de adyacencia --> PENDIENTE
+    #
     
     
