@@ -1,41 +1,36 @@
 import geopandas as gpd
-import libpysal
-import igraph
 import networkx as nx
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
 
 if __name__ == '__main__':
     city_to_remove = ['Campione d\'Italia', 'Capraia Isola', 'Isola del Giglio', 'Ponza', 'Ventotene', 'Procida',
                       'Isole Tremiti', 'Favignana', 'Pantelleria', 'Ustica', 'Lipari', 'Lampedusa e Linosa',
-                      'La Maddalena', 'Carloforte', 'Gorgona Scalo', 'Marettimo', 'Levanzo']
+                      'La Maddalena', 'Carloforte']
     path_city_shape = '../dati/Limiti01012023/Limiti01012023/Com01012023/Com01012023_WGS84.shp'
     # leggo il file
-    print('leggo il file')
     city_shape = gpd.read_file(path_city_shape)
     # tolgo le isole e le citta che non ci interessano
-    print('tolgo le isole e le citta che non ci interessano')
-    city_shape = city_shape[~city_shape['COMUNE'].isin(city_to_remove)]
+    city_shape = city_shape[~city_shape['COMUNE'].isin(city_to_remove)].reset_index(drop=True)
     # mi estrapolo la lista delle citta
-    print('mi estrapolo la lista delle citta')
-    city_list = list(city_shape['COMUNE'])
-    num_cities = len(city_list)
+    city_list = pd.DataFrame(columns=['COMUNE', 'PRO_COM_T'])
+    for i in range(city_shape.shape[0]):
+        city_list.loc[i, 'COMUNE'] = city_shape.iloc[i]['COMUNE']
+        city_list.loc[i, 'PRO_COM_T'] = city_shape.iloc[i]['PRO_COM_T']
     # calcolo dei vicini
-    print('calcolo dei vicini')
-    city_weights = libpysal.weights.Queen.from_dataframe(city_shape)
-    # calcolo centroidi
-    print('calcolo centroidi')
-    city_centroid = city_shape.centroid
-    # matrice di adiacenza
-    print('matrice di adiacenza')
-    cities_matrix = libpysal.weights.full(city_weights)[0]
+    city_shape['NB'] = None
+    for i in range(city_shape.shape[0]):
+        nb = list(
+            np.argwhere(city_shape['geometry'].touches(city_shape['geometry'][int(i)]).to_numpy() == True).flatten())
+        city_shape.at[i, 'NB'] = nb
     # matrice distanze
-    print('matrice distanze')
-    graph_city = nx.Graph(cities_matrix)
-    print('errore passato')
-    distance_matrix = nx.all_pairs_shortest_path_length(graph_city)
-    output = pd.DataFrame(distance_matrix)
-    print('fine')
-    output.to_pickle('../dati/distance_matrix.pkl')
-    print('vittoria')
+    g = nx.Graph()
+    counter = []
+    g.add_nodes_from(range(city_shape.shape[0]))
+    for i in range(city_shape.shape[0]):
+        nb = list(city_shape.iloc[i]['NB'])
+        for arc in nb:
+            g.add_edge(i, arc)
+    distances = nx.all_pairs_shortest_path_length(g)
+    distances = pd.DataFrame(dict(distances))
+    distances.to_pickle('../dati/distance_matrix.pkl')
