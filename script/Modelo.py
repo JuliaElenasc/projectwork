@@ -79,13 +79,6 @@ print('hasta aqui!!!')
 #----------------------------------------------------------------------------------
 
 # Guardar el DataFrame en un archivo CSV
-
-
-
-    
-
-
-    # 
     # en media_random calcula una media ponderada del numero de accidentes de transito
     # con la formula n_vehiculos*frecuencia_accidentes/numero de vehiculos total
     # 
