@@ -7,9 +7,11 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.cm import get_cmap, ScalarMappable
 from matplotlib.colors import Normalize
+
 # librerie varie
 import os
 import geopandas as gpd
+
 # funzioni nostre
 import clean_merge_csv as cmc
 import create_distance_matrix as cdmx
@@ -29,20 +31,35 @@ def update_map():
     canvas.draw()
 
 
+def exit_app():
+    root.destroy()
+
+
 if __name__ == '__main__':
     # Dichiarazione percorso file e nomi dei file
-    path_read_shp_file = r'./dati/Limiti01012023/Limiti01012023/Com01012023/Com01012023_WGS84.shp'
-    path_read_csv_file = r'./dati/DatidiMercato.csv'
-    path_save_distance_matrix = r'./output/distance_matrix.csv'
-    path_save_clean_csv = r'./output/Mercato_code.csv'
-    path_geojson = r'./output/city_list.geojson'
+    path_data=r'../dati'
+    path_read_shp_file = r'../dati/Limiti01012023/Limiti01012023/Com01012023/Com01012023_WGS84.shp'
+    path_read_csv_file = r'../dati/DatidiMercato.csv'
+    path_save_distance_matrix = r'../output/distance_matrix.csv'
+    path_save_clean_csv = r'../output/Mercato_code.csv'
+    path_geojson = r'../output/city_list.geojson'
     # creazione delle cartelle in caso mancassero
-    if not os.path.exists(r'../output/'):
+    if not os.path.exists(path_data):
+        print('Cartella dei dati non trovata')
         try:
             # Se non esiste, crea la cartella
-            os.makedirs(r'../output/')
+            os.makedirs(path_data)
+            print(f'Cartella per i dati creata, inserire i dati in questa cartella:\n{os.path.abspath(path_data)}')
         except OSError as e:
-            print('errore')
+            print('Errore nella creazione della cartella per i dati')
+        quit()
+    if not os.path.exists(r'../output'):
+        try:
+            # Se non esiste, crea la cartella
+            os.makedirs(r'../output')
+        except OSError as e:
+            print('Errore, impossibile creare la cartella per i dati in output')
+            quit()
     # lavorazione dei dati
     # pulizia del csv
     cmc.clean_data(path_read_csv_file, path_read_shp_file, path_save_clean_csv)
@@ -69,20 +86,21 @@ if __name__ == '__main__':
     # creazione della GUI
     root = tk.Tk()
     root.title("Frequenza sinistri smoothed")
-    region_label = ttk.Label(root, text="Seleziona regioni:")
+    region_label = ttk.Label(root, text="Seleziona regioni:", )
     region_label.pack()
     region_var = tk.StringVar()
     region_combo = ttk.Combobox(root, textvariable=region_var, values=list(regioni.keys()))
     region_combo.pack()
-    update_button = ttk.Button(root, text="Esegui", command=update_map)
+    update_button = ttk.Button(root, text="Aggiorna Mappa", command=update_map)
     update_button.pack()
+    exit_button = ttk.Button(root, text="Esci", command=exit_app)
+    exit_button.pack()
     # creazione del grafico
     fig, ax = plt.subplots(1, 1, figsize=(10, 8))
     cax = fig.add_axes([0.89, 0.1, 0.03, 0.8])
     data_map.plot(column='smoothed_freq', cmap=cmap, ax=ax, legend=True, cax=cax)
-    fig.colorbar(sm, cax=cax, label='%')
-    plt.title('Frequenza sinistri')
+    fig.colorbar(sm, cax=cax, label='Frequenza sinistri %')
+    plt.title('Smoothing')
     canvas = FigureCanvasTkAgg(fig, master=root)
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
     root.mainloop()
-
